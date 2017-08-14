@@ -1,7 +1,12 @@
 # PBImgmt
 Manage your PBI env VIA Powershell Script
 
+Based on the following project: 
+https://github.com/Azure-Samples/powerbi-powershell/
+
 Please make sure that you fill in the $clientId pramater within the script.
+
+
 
 ## Prerequisites:
 
@@ -28,10 +33,6 @@ Redirect URL: urn:ietf:wg:oauth:2.0:oob
 
 Level of access: all dataset APIs
 
-
-Based on the following project:
-
-https://github.com/Azure-Samples/powerbi-powershell/
 
 ## Current supported actions
 
