@@ -17,9 +17,8 @@ Please make sure that you fill in the $clientId pramater within the script.
 
 Please make sure that you fill in the $clientId pramater.
 
-To set it up, go to the following page and follow the steps to provision an app
+To set it up, go to the following page and follow the steps to provision an app https://dev.powerbi.com/apps
 
-https://dev.powerbi.com/apps
 
 To get the sample to work, ensure that you have the following fields:
 
@@ -34,24 +33,24 @@ Based on the following project:
 
 https://github.com/Azure-Samples/powerbi-powershell/
 
-## Current supported actions:
+## Current supported actions
 
-List Groups - Lists all groups (App Workspaces)
+**List Groups -** Lists all groups (App Workspaces)
 
-List Reports - List all reports or per specifc group   
+**List Reports -** List all reports or per specifc group   
 
-List Datasets - List all datasets or per specifc group    
+**List Datasets -** List all datasets or per specifc group    
 
-Clone Single Report - Clones a selected report   
+**Clone Single Report -** Clones a selected report   
 
-Clone All App Reports - Clones all the reports in an app workspace for a selected dataset
+**Clone All App Reports -** Clones all the reports in an app workspace for a selected dataset
 
-Delete Report - Deletes a report
+**Delete Report -** Deletes a report
 
-Rebind Report - Rebinds a report to a different datasource
+**Rebind Report -** Rebinds a report to a different datasource
 
-Rebind Dataset - Changes a dataset's connection string
+**Rebind Dataset -** Changes a dataset's connection string
 
-Get Dashboards - Lists dashboards
+**Get Dashboards -** Lists dashboards
 
-Get Tiles - Lists dashboard tiles
+**Get Tiles -** Lists dashboard tiles
