@@ -53,6 +53,7 @@ IF ([string]::IsNullOrWhitespace($clientId))
     return;
 }
 
+$apiPrefix="https://api.powerbi.com/v1.0"
 
 # End Parameters =======================================
 
@@ -101,7 +102,7 @@ function getGroupsData($at, $groupId)
     }
 
 
-    $getGroupsUri = "https://api.powerbi.com/v1.0/myorg/groups"
+    $getGroupsUri = "$apiPrefix/myorg/groups"
      IF ([string]::IsNullOrWhitespace($groupId))
     {
         (Invoke-RestMethod -Uri $getGroupsUri –Headers $authHeader –Method GET).value
@@ -143,12 +144,12 @@ function listReports($at, $groupId)
     foreach ($grp in $groups)
     {    
         $groupId=$grp.id
-        $getReportsUri = "https://api.powerbi.com/v1.0/myorg/groups/$groupId/reports"
+        $getReportsUri = "$apiPrefix/myorg/groups/$groupId/reports"
         $reports=(Invoke-RestMethod -Uri $getReportsUri –Headers $authHeader –Method GET).value
         foreach ($report in $reports)
         {
             $dsId = $report.datasetId
-            $getDSUri = "https://api.powerbi.com/v1.0/myorg/groups/$groupId/datasets/$dsId"
+            $getDSUri = "$apiPrefix/myorg/groups/$groupId/datasets/$dsId"
             #$getDSUri
             try
             {
@@ -196,7 +197,7 @@ function listDatasets($at, $groupId)
     }
 
     
-    $getDatasetsUri = "https://api.powerbi.com/v1.0/$sourceGroupsPath/datasets"
+    $getDatasetsUri = "$apiPrefix/$sourceGroupsPath/datasets"
     write-host $getDatasetsUri 
     $datasets=(Invoke-RestMethod -Uri $getDatasetsUri  –Headers $authHeader –Method GET).value
     return $datasets    
@@ -234,7 +235,7 @@ function getReportGUIDList($at, $groupId)
     foreach ($grp in $groups)
     {    
         $groupId=$grp.id
-        $getReportsUri = "https://api.powerbi.com/v1.0/myorg/groups/$groupId/reports"
+        $getReportsUri = "$apiPrefix/myorg/groups/$groupId/reports"
         $reports=(Invoke-RestMethod -Uri $getReportsUri –Headers $authHeader –Method GET).value
         foreach ($report in $reports)
         {
@@ -248,6 +249,18 @@ function getReportGUIDList($at, $groupId)
 
 
 # Clones one report between groups
+#
+# SOURCE report info
+# An easy way to get this is to navigate to the report in the Power BI service
+# The URL will contain the group and report IDs with the following format:
+# app.powerbi.com/groups/{groupID}/report/{reportID} 
+#
+#
+# TARGET report info
+# An easy way to get group and dataset ID is to go to dataset settings and click on the dataset
+# that you'd like to refresh. Once you do, the URL in the address bar will show the group ID and 
+# dataset ID, in the format: 
+# app.powerbi.com/groups/{groupID}/settings/datasets/{datasetID} 
 
 function cloneSingleReport(
         $at
@@ -258,13 +271,6 @@ function cloneSingleReport(
         , $targetDatasetId # the ID of the dataset that you'd like to rebind the target report to. Leave this blank to have the target report use the same dataset
         )
 {
-    # SOURCE report info
-
-    # An easy way to get this is to navigate to the report in the Power BI service
-
-    # The URL will contain the group and report IDs with the following format:
-
-    # app.powerbi.com/groups/{groupID}/report/{reportID} 
 
     write-host ""
     IF ([string]::IsNullOrWhitespace($sourceReportGroupId))
@@ -274,8 +280,7 @@ function cloneSingleReport(
         $sourceReportGroupId = read-host -prompt "Please select the SOURCE APP WORKSPACE: " 
        
     }
-    #$sourceReportGroupId = "c5312412-319e-46ba-aaef-c6b0fbe9a70d"    # the ID of the group (workspace) that hosts the source report. Use "me" if this is your My Workspace
-
+    
     IF ([string]::IsNullOrWhitespace($sourceReportId))
     {
         $reports = listReports -groupId $sourceReportGroupId  -at $at
@@ -283,24 +288,12 @@ function cloneSingleReport(
         $sourceReportId = read-host -prompt "Please select the SOURCE REPORT ID: " 
     }
 
-    #$sourceReportId = "fbdb59ac-72ac-4acb-ab68-e16727076405"         # the ID of the source report
-
+    
     IF ([string]::IsNullOrWhitespace($targetReportName))
     {
         
         $targetReportName = (listReports -groupId $sourceReportGroupId  -at $at | Where-Object {$_.id -eq $sourceReportId}).name
     }
-
-
-    # TARGET report info
-
-    # An easy way to get group and dataset ID is to go to dataset settings and click on the dataset
-
-    # that you'd like to refresh. Once you do, the URL in the address bar will show the group ID and 
-
-    # dataset ID, in the format: 
-
-    # app.powerbi.com/groups/{groupID}/settings/datasets/{datasetID} 
 
 
     write-host ""
@@ -315,18 +308,14 @@ function cloneSingleReport(
 
     IF ([string]::IsNullOrWhitespace($targetDatasetId))
     {
-        #$datasets = listReports -at $at -groupId $targetGroupId |select-object -Property datasetId,datasetName -Unique
         $datasets = listDatasets -at $at -groupId $targetGroupId 
         $datasets | write-host | Format-Table -AutoSize | Out-String -Width 4096
         $targetDatasetId = read-host -prompt "Please select the TARGET DATASET ID: " 
         
     }
 
-
-
     # Get the auth token from AAD
     $token = $at
-
 
     # Building Rest API header with authorization token
     $authHeader = @{
@@ -355,15 +344,12 @@ function cloneSingleReport(
     $jsonPostBody = $postParams | ConvertTo-JSON
 
     # Get reports in the new group
-    $targetReportsUri = "https://api.powerbi.com/v1.0/myorg/groups/$targetGroupId/reports"
+    $existingReports=listReports -at $at -groupId $targetGroupId
     
-    $existingReports=Invoke-RestMethod -Uri $targetReportsUri –Headers $authHeader –Method GET –Verbose
-    foreach ($id in ($existingReports.value | Where-Object {$_.name -eq $targetReportName}).id)
+    foreach ($id in ($existingReports | Where-Object {$_.name -eq $targetReportName}).id)
     {
         Write-Output "Deleting: "  $id
-        $deleteReportUri = "https://api.powerbi.com/v1.0/myorg/groups/$targetGroupId/reports/$id"
-    
-        Invoke-RestMethod -Uri $deleteReportUri –Headers $authHeader –Method DELETE –Verbose
+        deleteReport -at $at -groupId $targetGroupId -reportId $id
     }
     
     
@@ -371,7 +357,7 @@ function cloneSingleReport(
     
     # Make the request to clone the report
     
-    $uri = "https://api.powerbi.com/v1.0/$sourceGroupsPath/reports/$sourceReportId/clone"
+    $uri = "$apiPrefix/$sourceGroupsPath/reports/$sourceReportId/clone"
     
     Invoke-RestMethod -Uri $uri –Headers $authHeader –Method POST -Body $jsonPostBody –Verbose
 }
@@ -385,14 +371,6 @@ function deleteReport(
         , $reportId
         )
 {
-    # SOURCE report info
-
-    # An easy way to get this is to navigate to the report in the Power BI service
-
-    # The URL will contain the group and report IDs with the following format:
-
-    # app.powerbi.com/groups/{groupID}/report/{reportID} 
-
     write-host ""
     IF ([string]::IsNullOrWhitespace($groupId))
     { 
@@ -430,7 +408,7 @@ function deleteReport(
 
 
    
-    $deleteReportUri = "https://api.powerbi.com/v1.0/myorg/groups/$groupId/reports/$reportId"
+    $deleteReportUri = "$apiPrefix/myorg/groups/$groupId/reports/$reportId"
     
     Invoke-RestMethod -Uri $deleteReportUri –Headers $authHeader –Method DELETE –Verbose
     
@@ -500,7 +478,7 @@ function rebindReport(
 
     $jsonPostBody = $postParams | ConvertTo-JSON
 
-    $rebindReportUri = "https://api.powerbi.com/v1.0/myorg/groups/$groupId/reports/$reportId/Rebind"
+    $rebindReportUri = "$apiPrefix/myorg/groups/$groupId/reports/$reportId/Rebind"
     
     Invoke-RestMethod -Uri $rebindReportUri –Headers $authHeader -Body $jsonPostBody –Method POST –Verbose
     
@@ -568,7 +546,7 @@ function rebindDataset(
 
     $jsonPostBody = $postParams | ConvertTo-JSON
 
-    $rebindDatasetUri = "https://api.powerbi.com/v1.0/$sourceGroupsPath/datasets/$targetDatasetId/Default.SetAllConnections"
+    $rebindDatasetUri = "$apiPrefix/$sourceGroupsPath/datasets/$targetDatasetId/Default.SetAllConnections"
     $jsonPostBody
 
     Invoke-RestMethod -Uri $rebindDatasetUri –Headers $authHeader -Body $jsonPostBody –Method POST –Verbose
@@ -659,7 +637,7 @@ function listDashboards($at, $groupId)
     }
 
     
-    $getDashboardsUri = "https://api.powerbi.com/v1.0/$sourceGroupsPath/dashboards"
+    $getDashboardsUri = "$apiPrefix/$sourceGroupsPath/dashboards"
     write-host $getDatasetsUri 
     $dashboards=(Invoke-RestMethod -Uri $getDashboardsUri  –Headers $authHeader –Method GET).value
     return $dashboards    
@@ -708,7 +686,7 @@ function listTiles($at, $groupId, $dashboardId)
     }
 
     
-    $getTilesUri = "https://api.powerbi.com/v1.0/$sourceGroupsPath/dashboards/$dashboardId/tiles"
+    $getTilesUri = "$apiPrefix/$sourceGroupsPath/dashboards/$dashboardId/tiles"
     write-host $getTilesUri  
     $tiles=(Invoke-RestMethod -Uri $getTilesUri   –Headers $authHeader –Method GET).value
     return $tiles
@@ -788,13 +766,3 @@ $authToken = GetAuthToken
 while (mainControlFlow -at $authToken)
 {
 }
-
-
-## Tests
-#listTiles -at $authToken | format-table 
-#listDashboards -at $authToken | format-table -AutoSize | Out-String -Width 4096
-#rebindDataset -at $authToken
-#cloneAllGroupReports -at $authToken
-#getReportGUIDList -at $authToken
-#cloneSingleReport -at $authToken
-#listDatasets -at $authToken  -groupId b3b4c91c-7cfc-4899-bfc0-0492835c91bc | Format-Table -AutoSize | Out-String -Width 4096 | write-host
