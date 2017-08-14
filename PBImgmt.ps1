@@ -1,4 +1,4 @@
-# This sample script calls the Power BI API to progammatically clone a SOURCE report to a 
+# This sample script calls the Power BI API to perform different mangement tasks on a Power BI environment.
 
 # TARGET report in the Power BI service. The clone can either be based off of the same 
 
@@ -6,9 +6,9 @@
 
 
 
-# For documentation, please see:
+# For full API documentation, please see:
 
-# https://msdn.microsoft.com/en-us/library/mt784674.aspx
+# https://msdn.microsoft.com/en-us/library/mt147898.aspx
 
 
 
@@ -25,10 +25,6 @@
 # Parameters - fill these in before running the script!
 
 # =====================================================
-
-
-
-
 
 
 # AAD Client ID
@@ -275,7 +271,7 @@ function cloneSingleReport(
     write-host ""
     IF ([string]::IsNullOrWhitespace($sourceReportGroupId))
     { 
-        getGroupsData -at $at | write-host | Format-Table -AutoSize
+        getGroupsData -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         write-host ""
         $sourceReportGroupId = read-host -prompt "Please select the SOURCE APP WORKSPACE: " 
        
@@ -283,8 +279,7 @@ function cloneSingleReport(
     
     IF ([string]::IsNullOrWhitespace($sourceReportId))
     {
-        $reports = listReports -groupId $sourceReportGroupId  -at $at
-        $reports | write-host | Format-Table -AutoSize | Out-String -Width 4096
+        listReports -at $at -groupId $sourceReportGroupId | Format-Table -AutoSize | Out-String -Width 4096 | write-host ;
         $sourceReportId = read-host -prompt "Please select the SOURCE REPORT ID: " 
     }
 
@@ -299,7 +294,7 @@ function cloneSingleReport(
     write-host ""
     IF ([string]::IsNullOrWhitespace($targetGroupId))
     { 
-        getGroupsData -at $at| write-host | Format-Table -AutoSize
+        getGroupsData -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         write-host ""
         $targetGroupId = read-host -prompt "Please select the TARGET APP WORKSPACE: " 
        
@@ -308,8 +303,7 @@ function cloneSingleReport(
 
     IF ([string]::IsNullOrWhitespace($targetDatasetId))
     {
-        $datasets = listDatasets -at $at -groupId $targetGroupId 
-        $datasets | write-host | Format-Table -AutoSize | Out-String -Width 4096
+        $datasets = listDatasets -at $at -groupId $targetGroupId | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         $targetDatasetId = read-host -prompt "Please select the TARGET DATASET ID: " 
         
     }
@@ -374,7 +368,7 @@ function deleteReport(
     write-host ""
     IF ([string]::IsNullOrWhitespace($groupId))
     { 
-        getGroupsData -at $at | Format-Table -AutoSize 
+        getGroupsData -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         write-host ""
         $groupId = read-host -prompt "Please select the APP WORKSPACE: " 
        
@@ -382,8 +376,7 @@ function deleteReport(
 
     IF ([string]::IsNullOrWhitespace($reportId))
     {
-        $reports = listReports -groupId $groupId  -at $at
-        $reports | Format-Table -AutoSize | write-host
+        listReports -groupId $groupId  -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         $reportId = read-host -prompt "Please select the  REPORT ID: " 
     }
 
@@ -429,7 +422,7 @@ function rebindReport(
     write-host ""
     IF ([string]::IsNullOrWhitespace($groupId))
     { 
-        getGroupsData -at $at | Format-Table -AutoSize 
+        getGroupsData -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         write-host ""
         $groupId = read-host -prompt "Please select the APP WORKSPACE: " 
        
@@ -437,15 +430,13 @@ function rebindReport(
 
     IF ([string]::IsNullOrWhitespace($reportId))
     {
-        $reports = listReports -groupId $groupId  -at $at
-        $reports | Format-Table -AutoSize #| write-host
+        listReports -groupId $groupId  -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         $reportId = read-host -prompt "Please select the  REPORT ID: " 
     }
 
     IF ([string]::IsNullOrWhitespace($targetDatasetId))
     {
-        $datasets = listReports -groupId $groupId  -at $at |select-object -Property datasetId,datasetName -Unique 
-        $datasets | Format-Table -AutoSize #| write-host
+        listDatasets -groupId $groupId  -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         $targetDatasetId = read-host -prompt "Please select the TARGET DATASET ID: " 
     }
 
@@ -499,7 +490,7 @@ function rebindDataset(
     write-host ""
     IF ([string]::IsNullOrWhitespace($groupId))
     { 
-        getGroupsData -at $at | Format-Table -AutoSize 
+        getGroupsData -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         write-host ""
         $groupId = read-host -prompt "Please select the APP WORKSPACE: " 
        
@@ -508,8 +499,7 @@ function rebindDataset(
 
     IF ([string]::IsNullOrWhitespace($targetDatasetId))
     {
-        $datasets = listDatasets -at $at -groupId $groupId
-        $datasets | Format-Table -AutoSize #| write-host
+        listDatasets -at $at -groupId $groupId | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         $targetDatasetId = read-host -prompt "Please select the TARGET DATASET ID: " 
     }
 
@@ -565,18 +555,11 @@ function cloneAllGroupReports(
         , $targetDatasetId # the ID of the dataset that you'd like to rebind the target report to. Leave this blank to have the target report use the same dataset
         )
 {
-    # SOURCE report info
-
-    # An easy way to get this is to navigate to the report in the Power BI service
-
-    # The URL will contain the group and report IDs with the following format:
-
-    # app.powerbi.com/groups/{groupID}/report/{reportID} 
-    
+ 
     write-host ""
     IF ([string]::IsNullOrWhitespace($sourceGroupId))
     { 
-        getGroupsData -at $at | Format-Table -AutoSize | write-host
+        getGroupsData -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         write-host ""
         $sourceGroupId = read-host -prompt "Please select the SOURCE APP WORKSPACE: " 
        
@@ -584,14 +567,13 @@ function cloneAllGroupReports(
 
     IF ([string]::IsNullOrWhitespace($sourceDatasetId))
     {
-        $sourceDatasets = listReports -at $at -groupId $sourceGroupId |select-object -Property datasetId,datasetName -Unique
-        $sourceDatasets | Format-Table -AutoSize | Out-String -Width 4096 | write-host
+        listDatasets -at $at -groupId $sourceGroupId | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         $sourceDatasetId = read-host -prompt "Please select the SOURCE DATASET ID: " 
     }
 
     IF ([string]::IsNullOrWhitespace($targetGroupId))
     { 
-        getGroupsData -at $at | Format-Table -AutoSize | write-host
+        getGroupsData -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         write-host ""
         $targetGroupId = read-host -prompt "Please select the TARGET APP WORKSPACE: " 
        
@@ -599,8 +581,7 @@ function cloneAllGroupReports(
     
     IF ([string]::IsNullOrWhitespace($targetDatasetId))
     {
-        $targetDatasets = listReports -at $at -groupId $targetGroupId |select-object -Property datasetId,datasetName -Unique 
-        $targetDatasets | Format-Table -AutoSize | Out-String -Width 4096 | write-host
+        listDatasets -at $at -groupId $targetGroupId | Format-Table -AutoSize | Out-String -Width 4096 | write-host
         $targetDatasetId = read-host -prompt "Please select the TARGET DATASET ID: " 
     }
 
@@ -654,14 +635,14 @@ function listTiles($at, $groupId, $dashboardId)
 
     IF ([string]::IsNullOrWhitespace($groupId))
     {
-        getGroupsData -at $at | write-host
+        getGroupsData -at $at | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         $groupId = read-host -prompt "Please select the GROUP ID: " 
     }
 
 
     IF ([string]::IsNullOrWhitespace($dashboardId))
     {
-        listDashboards -at $at -groupId $groupId | write-host
+        listDashboards -at $at -groupId $groupId | Format-Table -AutoSize | Out-String -Width 4096 | write-host;
         $dashboardId = read-host -prompt "Please select the DASHBOARD ID: " 
     }
 
