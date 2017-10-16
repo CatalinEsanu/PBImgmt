@@ -55,3 +55,12 @@ Level of access: all dataset APIs
 **Get Dashboards -** Lists dashboards
 
 **Get Tiles -** Lists dashboard tiles
+
+## Output functionality supported
+
+User will be presented by the following output options:
+
+1. Output to Screen
+2. Output to file location.
+
+File location provided must be a folder. Trailing slash is handled in code.
