@@ -22,7 +22,7 @@
 # Redirect URL: urn:ietf:wg:oauth:2.0:oob
 #  Level of access: all dataset APIs
 
-$clientId = "ca67d3ba-5357-4ef5-8afe-153d9d1f4a7c" 
+$clientId = "" 
 
 IF ([string]::IsNullOrWhitespace($clientId))
 {
